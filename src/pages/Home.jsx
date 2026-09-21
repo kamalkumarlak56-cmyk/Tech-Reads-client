@@ -1,10 +1,40 @@
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import api from "../api/axios.js";
 import ProductCard from "../components/ProductCard.jsx";
 import { sampleProducts } from "../data/sampleProducts.js";
 
 export default function Home() {
-  const books = sampleProducts.filter((product) => product.category === "Book");
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const { data } = await api.get("/products", { params: { sort: "latest" } });
+        setProducts(data);
+      } catch {
+        // The sample catalog keeps the homepage useful when the API is unavailable.
+        setProducts([]);
+      }
+    };
+
+    loadProducts();
+  }, []);
+
+  const catalogProducts = useMemo(() => {
+    const productsByTitle = new Map(sampleProducts.map((product) => [product.title, product]));
+    products.forEach((product) => productsByTitle.set(product.title, product));
+    return [...productsByTitle.values()];
+  }, [products]);
+
+  const books = catalogProducts.filter((product) => product.category === "Book");
+  const newArrivalBooks = [...books]
+    .sort((a, b) => {
+      const newestFirst = new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      return newestFirst || sampleProducts.indexOf(b) - sampleProducts.indexOf(a);
+    })
+    .slice(0, 3);
   const mostPurchasedBooks = [...books].sort((a, b) => b.purchasedCount - a.purchasedCount).slice(0, 3);
   const mostRatedBooks = [...books].sort((a, b) => b.rating - a.rating).slice(0, 3);
 
@@ -27,13 +57,29 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="bg-white py-16">
+        <div className="mx-auto w-[min(1180px,calc(100%_-_40px))]">
+          <div className="mb-7 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+            <div>
+              <span className="mb-3 inline-block text-xs font-extrabold uppercase text-teal-600">Just in</span>
+              <h2 className="text-3xl font-black text-ink md:text-4xl">New arrival books</h2>
+              <p className="mt-2 text-muted">Fresh reads for your technology bookshelf.</p>
+            </div>
+            <Link to="/products" className="font-bold text-blue-600 hover:text-blue-700">View all books</Link>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {newArrivalBooks.map((product) => <ProductCard key={`new-${product._id}`} product={product} />)}
+          </div>
+        </div>
+      </section>
+
       <section className="mx-auto w-[min(1180px,calc(100%_-_40px))] py-16">
         <div className="mb-7">
           <span className="mb-3 inline-block text-xs font-extrabold uppercase text-teal-600">Featured</span>
           <h2 className="text-3xl font-black tracking-normal text-ink md:text-4xl">Latest technology picks</h2>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {sampleProducts.map((product) => <ProductCard key={product._id} product={product} />)}
+          {catalogProducts.map((product) => <ProductCard key={product._id} product={product} />)}
         </div>
       </section>
 

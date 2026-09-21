@@ -1,13 +1,24 @@
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useAuth } from "./AuthContext.jsx";
 
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const [items, setItems] = useState(() => JSON.parse(localStorage.getItem("sellbooks_cart") || "[]"));
+  const { user } = useAuth();
+  const cartStorageKey = user ? `sellbooks_cart_${user._id}` : null;
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    if (!cartStorageKey) {
+      setItems([]);
+      return;
+    }
+    setItems(JSON.parse(localStorage.getItem(cartStorageKey) || "[]"));
+  }, [cartStorageKey]);
 
   const persist = (nextItems) => {
     setItems(nextItems);
-    localStorage.setItem("sellbooks_cart", JSON.stringify(nextItems));
+    if (cartStorageKey) localStorage.setItem(cartStorageKey, JSON.stringify(nextItems));
   };
 
   const addToCart = (product) => {
@@ -29,12 +40,13 @@ export function CartProvider({ children }) {
 
   const removeFromCart = (id) => persist(items.filter((item) => item._id !== id));
   const clearCart = () => persist([]);
+  const resetCart = () => setItems([]);
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const value = useMemo(
-    () => ({ items, addToCart, updateQuantity, removeFromCart, clearCart, total }),
-    [items, total]
+    () => ({ items, addToCart, updateQuantity, removeFromCart, clearCart, resetCart, total }),
+    [items, total, cartStorageKey]
   );
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

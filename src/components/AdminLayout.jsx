@@ -1,17 +1,19 @@
 import { NavLink } from "react-router-dom";
-import { BarChart3, BookPlus, BookOpen, CreditCard, Users } from "lucide-react";
+import { BarChart3, BookPlus, BookOpen, CreditCard, MessageSquare, PackageCheck, Users } from "lucide-react";
 
 const links = [
   ["/admin", "Dashboard", BarChart3],
   ["/admin/add-product", "Add product", BookPlus],
   ["/admin/products", "All products", BookOpen],
   ["/admin/users", "Users", Users],
-  ["/admin/payments", "Payments", CreditCard]
+  ["/admin/orders", "Orders", PackageCheck],
+  ["/admin/payments", "Payments", CreditCard],
+  ["/admin/user-issues", "User issues", MessageSquare]
 ];
 
 export default function AdminLayout({ children }) {
   return (
-    <div className="mx-auto flex w-[min(1280px,calc(100%_-_40px))] gap-8 py-8">
+    <div className="admin-panel mx-auto flex w-[min(1280px,calc(100%_-_40px))] gap-8 py-8">
       <aside className="hidden w-56 flex-none rounded-lg border border-line bg-white p-4 shadow-soft md:block">
         <nav className="grid gap-1">
           {links.map(([path, label, Icon]) => (

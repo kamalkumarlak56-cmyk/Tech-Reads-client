@@ -24,6 +24,10 @@ export default function ProductDetails() {
   const [form, setForm] = useState({ rating: 5, comment: "" });
 
   useEffect(() => {
+    // ProductDetails stays mounted when a related-book link changes only the id.
+    // Resetting here prevents the next book from opening at the related-books area.
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
     const load = async () => {
       try {
         const [{ data: productData }, { data: reviewData }] = await Promise.all([
@@ -42,6 +46,22 @@ export default function ProductDetails() {
     setShowAllReviews(false);
     load();
   }, [id]);
+
+  useEffect(() => {
+    if (!user || !product) return;
+
+    const storageKey = `sellbooks_recent_views_${user._id}`;
+    const viewedProduct = {
+      _id: product._id,
+      title: product.title,
+      author: product.author,
+      technology: product.technology,
+      image: product.image
+    };
+    const previousViews = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    const updatedViews = [viewedProduct, ...previousViews.filter((item) => item._id !== product._id)].slice(0, 6);
+    localStorage.setItem(storageKey, JSON.stringify(updatedViews));
+  }, [product, user]);
 
   const submitReview = async (event) => {
     event.preventDefault();

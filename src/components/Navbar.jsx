@@ -8,10 +8,11 @@ const navLinkClass = ({ isActive }) =>
 
 export default function Navbar() {
   const { user, isAdmin, logout } = useAuth();
-  const { items } = useCart();
+  const { items, resetCart } = useCart();
   const navigate = useNavigate();
 
   const handleLogout = () => {
+    resetCart();
     logout();
     navigate("/");
   };
@@ -35,7 +36,7 @@ export default function Navbar() {
         )}
       </nav>
       <div className="flex items-center gap-2">
-        {!isAdmin && <Link to="/cart" className="relative grid h-10 w-10 place-items-center rounded-lg border border-line bg-white text-ink transition hover:border-blue-300 hover:text-blue-600" title="Cart">
+        {user && !isAdmin && <Link to="/cart" className="relative grid h-10 w-10 place-items-center rounded-lg border border-line bg-white text-ink transition hover:border-blue-300 hover:text-blue-600" title="Cart">
           <ShoppingCart size={19} />
           {items.length > 0 && <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center rounded-full bg-teal-600 px-1 text-xs font-bold text-white">{items.length}</span>}
         </Link>}

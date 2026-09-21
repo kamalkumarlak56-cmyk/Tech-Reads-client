@@ -4,6 +4,7 @@ import AdminLayout from "./components/AdminLayout.jsx";
 import Footer from "./components/Footer.jsx";
 import AdminRoute from "./components/AdminRoute.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import ScrollToTop from "./components/ScrollToTop.jsx";
 import About from "./pages/About.jsx";
 import AddProduct from "./pages/AddProduct.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
@@ -26,6 +27,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-ink">
+      <ScrollToTop />
       {!isAuthPage && <Navbar />}
       <main>
         <Routes>
@@ -36,14 +38,16 @@ export default function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/cart" element={<Cart />} />
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminLayout><AdminDashboard /></AdminLayout></AdminRoute>} />
           <Route path="/admin/add-product" element={<AdminRoute><AdminLayout><AddProduct /></AdminLayout></AdminRoute>} />
           <Route path="/admin/products" element={<AdminRoute><AdminLayout><AdminDashboard view="products" /></AdminLayout></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminLayout><AdminDashboard view="users" /></AdminLayout></AdminRoute>} />
+          <Route path="/admin/orders" element={<AdminRoute><AdminLayout><AdminDashboard view="orders" /></AdminLayout></AdminRoute>} />
           <Route path="/admin/payments" element={<AdminRoute><AdminLayout><AdminDashboard view="payments" /></AdminLayout></AdminRoute>} />
+          <Route path="/admin/user-issues" element={<AdminRoute><AdminLayout><AdminDashboard view="issues" /></AdminLayout></AdminRoute>} />
         </Routes>
       </main>
       {!isAdmin && !isAuthPage && <Footer />}

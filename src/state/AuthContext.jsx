@@ -34,8 +34,12 @@ export function AuthProvider({ children }) {
     localStorage.removeItem("sellbooks_user");
   };
 
+  const updateUser = (profile) => {
+    saveUser({ ...user, ...profile, token: user?.token });
+  };
+
   const value = useMemo(
-    () => ({ user, login, register, googleLogin, logout, isAdmin: user?.role === "admin" }),
+    () => ({ user, login, register, googleLogin, logout, updateUser, isAdmin: user?.role === "admin" }),
     [user]
   );
 

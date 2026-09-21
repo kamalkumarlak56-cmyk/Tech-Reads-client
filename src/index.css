@@ -14,3 +14,13 @@
     font: inherit;
   }
 }
+
+/* Keep the admin tables usable on small screens without showing browser scrollbars. */
+.admin-panel * {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.admin-panel *::-webkit-scrollbar {
+  display: none;
+}

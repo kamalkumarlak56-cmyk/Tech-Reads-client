@@ -15,9 +15,9 @@ export default function Login() {
     setError("");
     try {
       const loggedInUser = await login(form.email, form.password);
-      navigate(loggedInUser.role === "admin" ? "/admin" : "/products");
+      navigate(loggedInUser.role === "admin" ? "/admin" : "/", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
+      setError(err.response?.data?.message || (err.code === "ERR_NETWORK" ? "Cannot reach the server. Start the backend and try again." : "Login failed"));
     }
   };
 

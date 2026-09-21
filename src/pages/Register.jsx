@@ -15,9 +15,9 @@ export default function Register() {
     setError("");
     try {
       await register(form);
-      navigate("/products");
+      navigate("/", { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Registration failed");
+      setError(err.response?.data?.message || (err.code === "ERR_NETWORK" ? "Cannot reach the server. Start the backend and try again." : "Registration failed"));
     }
   };
 
@@ -33,7 +33,7 @@ export default function Register() {
           <input className="w-full rounded-lg border border-line px-4 py-3 pr-12 outline-none focus:border-blue-500" type={showPassword ? "text" : "password"} placeholder="Password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required />
           <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-blue-600" onClick={() => setShowPassword(!showPassword)} title={showPassword ? "Hide password" : "Show password"}>{showPassword ? <EyeOff size={19} /> : <Eye size={19} />}</button>
         </div>
-        <button className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700">Register</button>
+        <button type="submit" className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700">Register</button>
         <p className="text-muted">Already registered? <Link to="/login" className="font-bold text-blue-600">Login</Link></p>
       </form>
     </section>

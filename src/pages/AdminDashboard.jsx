@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Trash2 } from "lucide-react";
+import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
 import api from "../api/axios.js";
 
 const paymentLabel = (paymentStatus) => {
@@ -170,8 +170,14 @@ export default function AdminDashboard({ view = "dashboard" }) {
       <div className="rounded-lg border border-line bg-white p-6 shadow-soft">
         <h2 className="mb-4 text-2xl font-black">{view === "products" ? "All products" : "Manage products"}</h2>
         {products.map((product) => (
-          <div className="grid items-center gap-3 border-t border-line py-4 md:grid-cols-[1fr_auto_auto_auto]" key={product._id}>
-            <span>{product.title}</span><span>{product.category}</span><strong>₹{product.price}</strong>
+          <div className="grid items-center gap-3 border-t border-line py-4 md:grid-cols-[1fr_auto_auto_auto_auto_auto]" key={product._id}>
+            <div className="flex min-w-0 items-center gap-3">
+              <img className="h-14 w-12 rounded object-cover" src={product.image || "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=160&q=70"} alt="" />
+              <div className="min-w-0"><Link className="block truncate font-bold text-ink hover:text-blue-600" to={`/products/${product._id}`}>{product.title}</Link><span className="text-xs text-muted">Stock: {product.stock}</span></div>
+            </div>
+            <span>{product.category}</span><strong>₹{product.price}</strong>
+            <Link className="inline-flex items-center justify-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-bold hover:bg-slate-50" to={`/products/${product._id}`} title="View product"><Eye size={16} /> View</Link>
+            <Link className="inline-flex items-center justify-center gap-2 rounded-lg border border-blue-600 px-3 py-2 text-sm font-bold text-blue-600 hover:bg-blue-50" to={`/admin/products/${product._id}/edit`} title="Edit product"><Pencil size={16} /> Edit</Link>
             <button className="grid h-10 w-10 place-items-center rounded-lg border border-line bg-white hover:border-red-300 hover:text-red-600" onClick={() => removeProduct(product._id)} title="Delete product"><Trash2 size={17} /></button>
           </div>
         ))}

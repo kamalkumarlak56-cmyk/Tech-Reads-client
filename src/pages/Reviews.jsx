@@ -1,28 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
-import { sampleProducts } from "../data/sampleProducts.js";
-
-const reviews = [
-    { bookId: "sample-ai-book", name: "Aarav Mehta", rating: 5, quote: "The AI book collection is focused and practical. I found material I could use immediately." },
-    { bookId: "sample-ai-book", name: "Meera Shah", rating: 4, quote: "The evaluation chapters made difficult AI concepts easy to apply in my own projects." },
-    { bookId: "sample-ai-book", name: "Vikram Rao", rating: 5, quote: "The responsible AI guidance is thoughtful and easy to follow." },
-    { bookId: "sample-ai-book", name: "Nisha Verma", rating: 4, quote: "A strong introduction with examples that connect theory to real products." },
-    { bookId: "sample-ai-book", name: "Arjun Kapoor", rating: 5, quote: "Clear explanations and useful checklists for building reliable AI systems." },
-    { bookId: "sample-ai-book", name: "Pooja Iyer", rating: 5, quote: "One of the most practical AI books I have read this year." },
-    { bookId: "sample-cyber-book", name: "Imran Khan", rating: 5, quote: "Clean explanations and useful security examples. Perfect for students and working developers." },
-    { bookId: "sample-cyber-book", name: "Rohan Singh", rating: 5, quote: "The threat-modeling exercises are practical and valuable for anyone working in security." },
-    { bookId: "sample-cyber-book", name: "Ananya Das", rating: 5, quote: "The incident response chapters helped our team improve its security process." },
-    { bookId: "sample-cyber-book", name: "Rahul Joshi", rating: 4, quote: "Detailed without becoming difficult to read. A valuable security reference." },
-    { bookId: "sample-cyber-book", name: "Sana Ali", rating: 5, quote: "The examples make threat modeling much easier to understand." },
-    { bookId: "sample-cyber-book", name: "Kabir Mehta", rating: 5, quote: "Excellent practical guidance for building safer applications." },
-    { bookId: "sample-react-book", name: "Sneha Rao", rating: 5, quote: "The React patterns are clear and practical. I used the examples in my next project." },
-    { bookId: "sample-react-book", name: "Kavya Nair", rating: 4, quote: "A useful reference for authentication, state management, and production deployment." },
-    { bookId: "sample-react-book", name: "Dev Sharma", rating: 5, quote: "The architecture examples helped me organize a growing React codebase." },
-    { bookId: "sample-react-book", name: "Isha Kapoor", rating: 4, quote: "A concise and helpful guide for moving from tutorials to production work." },
-    { bookId: "sample-react-book", name: "Manav Gupta", rating: 5, quote: "The API integration patterns saved me a lot of implementation time." },
-    { bookId: "sample-react-book", name: "Tara Sen", rating: 5, quote: "Great reference material for everyday full-stack development." }
-];
+import api from "../api/axios.js";
 
 function Rating({ value }) {
     return (
@@ -80,14 +59,22 @@ function BookReviewCard({ book }) {
 }
 
 export default function Reviews() {
-    const books = sampleProducts
-        .filter((product) => product.category === "Book")
-        .map((book) => ({
-            ...book,
-            bookReviews: reviews.filter((review) => review.bookId === book._id)
-        }))
-        .filter((book) => book.bookReviews.length > 0)
-        .sort((a, b) => b.rating - a.rating);
+    const [books, setBooks] = useState([]);
+    useEffect(() => {
+        const loadReviews = async () => {
+            try {
+                const { data: products } = await api.get("/products", { params: { category: "Book", sort: "rating" } });
+                const results = await Promise.all(products.map(async (book) => {
+                    const { data: bookReviews } = await api.get(`/reviews/${book._id}`);
+                    return { ...book, bookReviews };
+                }));
+                setBooks(results.filter((book) => book.bookReviews.length));
+            } catch {
+                setBooks([]);
+            }
+        };
+        loadReviews();
+    }, []);
     const topRatedBooks = books.slice(0, Math.max(1, Math.ceil(books.length / 2)));
     const lowerRatedBooks = books.slice(topRatedBooks.length);
 

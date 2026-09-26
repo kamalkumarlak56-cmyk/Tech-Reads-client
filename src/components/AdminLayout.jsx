@@ -1,9 +1,8 @@
 import { NavLink } from "react-router-dom";
-import { BarChart3, BookPlus, BookOpen, CreditCard, MessageSquare, PackageCheck, Users } from "lucide-react";
+import { BarChart3, BookOpen, CreditCard, MessageSquare, PackageCheck, Users } from "lucide-react";
 
 const links = [
   ["/admin", "Dashboard", BarChart3],
-  ["/admin/add-product", "Add product", BookPlus],
   ["/admin/products", "All products", BookOpen],
   ["/admin/users", "Users", Users],
   ["/admin/orders", "Orders", PackageCheck],

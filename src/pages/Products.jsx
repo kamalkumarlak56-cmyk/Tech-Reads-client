@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/axios.js";
 import ProductCard from "../components/ProductCard.jsx";
-import { sampleProducts } from "../data/sampleProducts.js";
 
 export default function Products() {
   const [products, setProducts] = useState([]);
@@ -23,11 +22,7 @@ export default function Products() {
     loadProducts();
   }, [filters]);
 
-  const catalogProducts = useMemo(() => {
-    const productsByTitle = new Map(sampleProducts.map((product) => [product.title, product]));
-    products.forEach((product) => productsByTitle.set(product.title, product));
-    return [...productsByTitle.values()];
-  }, [products]);
+  const catalogProducts = products;
 
   const visibleProducts = useMemo(() => {
     const searchTerm = filters.search.trim().toLowerCase();

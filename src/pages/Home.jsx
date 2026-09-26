@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import api from "../api/axios.js";
 import ProductCard from "../components/ProductCard.jsx";
-import { sampleProducts } from "../data/sampleProducts.js";
 
 export default function Home() {
   const [products, setProducts] = useState([]);
@@ -22,17 +21,11 @@ export default function Home() {
     loadProducts();
   }, []);
 
-  const catalogProducts = useMemo(() => {
-    const productsByTitle = new Map(sampleProducts.map((product) => [product.title, product]));
-    products.forEach((product) => productsByTitle.set(product.title, product));
-    return [...productsByTitle.values()];
-  }, [products]);
-
-  const books = catalogProducts.filter((product) => product.category === "Book");
+  const books = products.filter((product) => product.category === "Book");
   const newArrivalBooks = [...books]
     .sort((a, b) => {
       const newestFirst = new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-      return newestFirst || sampleProducts.indexOf(b) - sampleProducts.indexOf(a);
+      return newestFirst;
     })
     .slice(0, 3);
   const mostPurchasedBooks = [...books].sort((a, b) => b.purchasedCount - a.purchasedCount).slice(0, 3);
@@ -79,7 +72,7 @@ export default function Home() {
           <h2 className="text-3xl font-black tracking-normal text-ink md:text-4xl">Latest technology picks</h2>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {catalogProducts.map((product) => <ProductCard key={product._id} product={product} />)}
+            {products.map((product) => <ProductCard key={product._id} product={product} />)}
         </div>
       </section>
 

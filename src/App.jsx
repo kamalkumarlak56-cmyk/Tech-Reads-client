@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import AdminLayout from "./components/AdminLayout.jsx";
 import Footer from "./components/Footer.jsx";
@@ -31,7 +31,7 @@ export default function App() {
       {!isAuthPage && <Navbar />}
       <main>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={isAdmin ? <Navigate to="/admin" replace /> : <Home />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/:id" element={<ProductDetails />} />
           <Route path="/about" element={<About />} />
@@ -43,6 +43,7 @@ export default function App() {
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/admin" element={<AdminRoute><AdminLayout><AdminDashboard /></AdminLayout></AdminRoute>} />
           <Route path="/admin/add-product" element={<AdminRoute><AdminLayout><AddProduct /></AdminLayout></AdminRoute>} />
+          <Route path="/admin/products/:id/edit" element={<AdminRoute><AdminLayout><AddProduct /></AdminLayout></AdminRoute>} />
           <Route path="/admin/products" element={<AdminRoute><AdminLayout><AdminDashboard view="products" /></AdminLayout></AdminRoute>} />
           <Route path="/admin/users" element={<AdminRoute><AdminLayout><AdminDashboard view="users" /></AdminLayout></AdminRoute>} />
           <Route path="/admin/orders" element={<AdminRoute><AdminLayout><AdminDashboard view="orders" /></AdminLayout></AdminRoute>} />

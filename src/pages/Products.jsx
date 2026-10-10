@@ -1,19 +1,24 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../api/axios.js";
 import ProductCard from "../components/ProductCard.jsx";
+import { readCache, writeCache } from "../utils/dataCache.js";
 
 export default function Products() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(() => readCache("products", []));
   const [filters, setFilters] = useState({ search: "", category: "", sort: "latest" });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => readCache("products", []).length === 0);
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
         const { data } = await api.get("/products", { params: filters });
-        setProducts(data);
+        const list = data || [];
+        setProducts(list);
+        if (!filters.search && !filters.category && filters.sort === "latest") {
+          writeCache("products", list);
+        }
       } catch {
-        setProducts([]);
+        // Keep cached products if any
       } finally {
         setLoading(false);
       }

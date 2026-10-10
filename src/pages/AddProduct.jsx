@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Plus, Search, X } from "lucide-react";
 import api from "../api/axios.js";
+import { readCache, writeCache } from "../utils/dataCache.js";
 
 const TECHNOLOGY_OPTIONS = [
   "AI",
@@ -62,6 +63,7 @@ export default function AddProduct() {
   const [selectedTechs, setSelectedTechs] = useState([]);
   const [techSearch, setTechSearch] = useState("");
   const [customTech, setCustomTech] = useState("");
+  const [imageMode, setImageMode] = useState("url");
   const [imageFile, setImageFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -71,7 +73,7 @@ export default function AddProduct() {
 
   useEffect(() => {
     if (!id) return;
-    api.get(`/products/${id}`).then(({ data }) => {
+    const applyProduct = (data) => {
       const loadedTechs = data.technology
         ? data.technology.split(",").map((t) => t.trim()).filter(Boolean)
         : [];
@@ -87,7 +89,19 @@ export default function AddProduct() {
         description: data.description || ""
       });
       if (data.image?.startsWith("data:") || data.image?.includes("cloudinary")) setImageMode("upload");
-    }).catch((err) => setError(err.response?.data?.message || "Could not load product"));
+    };
+
+    const cachedProducts = readCache("products", []);
+    const cachedMatch = cachedProducts.find((p) => p._id === id);
+    if (cachedMatch) {
+      applyProduct(cachedMatch);
+    }
+
+    api.get(`/products/${id}`).then(({ data }) => {
+      applyProduct(data);
+    }).catch((err) => {
+      if (!cachedMatch) setError(err.response?.data?.message || "Could not load product");
+    });
   }, [id]);
 
   const handleTechToggle = (tech) => {
@@ -167,9 +181,16 @@ export default function AddProduct() {
         stock: Number(form.stock)
       };
       if (isEditing) {
-        await api.put(`/products/${id}`, payload);
+        const { data: updated } = await api.put(`/products/${id}`, payload);
+        const current = readCache("products", []);
+        writeCache(
+          "products",
+          current.map((p) => (p._id === id ? updated : p))
+        );
       } else {
-        await api.post("/products", payload);
+        const { data: created } = await api.post("/products", payload);
+        const current = readCache("products", []);
+        writeCache("products", [created, ...current]);
       }
       navigate("/admin/products");
     } catch (err) {
@@ -394,7 +415,7 @@ export default function AddProduct() {
             disabled={uploading}
             className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {uploading ? "Uploading to Cloudinary..." : isEditing ? "Save changes" : "Publish product"}
+            {uploading ? "Uploading..." : isEditing ? "Save changes" : "Publish product"}
           </button>
           <Link
             to="/admin/products"

@@ -16,6 +16,7 @@ export default function ProductDetails() {
   const [reviews, setReviews] = useState([]);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [form, setForm] = useState({ rating: 5, comment: "" });
+  const [reviewError, setReviewError] = useState("");
 
   useEffect(() => {
     // ProductDetails stays mounted when a related-book link changes only the id.
@@ -29,15 +30,17 @@ export default function ProductDetails() {
           api.get(`/reviews/${id}`)
         ]);
         setProduct(productData);
-        setReviews(reviewData);
+        setReviews(Array.isArray(reviewData) ? reviewData : []);
         if (isAdmin) {
           setRelatedBooks([]);
         } else {
           const { data: productsData } = await api.get("/products", { params: { category: "Book" } });
-          setRelatedBooks(productsData
-            .filter((item) => item._id !== productData._id)
-            .sort((a, b) => Number(b.technology === productData.technology) - Number(a.technology === productData.technology))
-            .slice(0, 3));
+          setRelatedBooks(
+            (productsData || [])
+              .filter((item) => item._id !== productData._id)
+              .sort((a, b) => Number(b.technology === productData.technology) - Number(a.technology === productData.technology))
+              .slice(0, 3)
+          );
         }
       } catch {
         setProduct(null);
@@ -61,16 +64,34 @@ export default function ProductDetails() {
       technology: product.technology,
       image: product.image
     };
-    const previousViews = JSON.parse(localStorage.getItem(storageKey) || "[]");
-    const updatedViews = [viewedProduct, ...previousViews.filter((item) => item._id !== product._id)].slice(0, 6);
-    localStorage.setItem(storageKey, JSON.stringify(updatedViews));
+    try {
+      const previousViews = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      const updatedViews = [viewedProduct, ...previousViews.filter((item) => item._id !== product._id)].slice(0, 6);
+      localStorage.setItem(storageKey, JSON.stringify(updatedViews));
+    } catch {
+      // Ignore localStorage errors
+    }
   }, [product, user]);
 
   const submitReview = async (event) => {
     event.preventDefault();
-    const { data } = await api.post(`/reviews/${id}`, form);
-    setReviews([data, ...reviews]);
-    setForm({ rating: 5, comment: "" });
+    setReviewError("");
+    try {
+      const { data } = await api.post(`/reviews/${id}`, form);
+      setReviews((prev) => [
+        data,
+        ...prev.filter((r) => r._id !== data._id && (r.user?._id || r.user) !== (user?._id))
+      ]);
+      setProduct((prev) => {
+        if (!prev) return prev;
+        const newRating = data.productRating !== undefined ? data.productRating : prev.rating;
+        const newCount = data.productReviewCount !== undefined ? data.productReviewCount : prev.reviewCount + 1;
+        return { ...prev, rating: newRating, reviewCount: newCount };
+      });
+      setForm({ rating: 5, comment: "" });
+    } catch (err) {
+      setReviewError(err.response?.data?.message || "Failed to submit review");
+    }
   };
 
   const visibleReviews = showAllReviews ? reviews : reviews.slice(0, 5);
@@ -79,10 +100,13 @@ export default function ProductDetails() {
       navigate("/login");
       return;
     }
+    if (product.stock <= 0) return;
     addToCart(product);
   };
 
   if (!product) return <section className="mx-auto w-[min(1180px,calc(100%_-_40px))] py-16"><p>Loading...</p></section>;
+
+  const isOutOfStock = product.stock <= 0;
 
   return (
     <section className="mx-auto grid w-[min(1180px,calc(100%_-_40px))] gap-9 py-16 lg:grid-cols-[0.9fr_1.1fr]">
@@ -103,9 +127,13 @@ export default function ProductDetails() {
         <p className="mt-3 text-muted">By {product.author || "TechReads Editorial"}</p>
         <div className="my-5 flex items-center gap-5 text-2xl">
           <strong>₹{product.price}</strong>
-          <span className="inline-flex items-center gap-1 text-base font-bold text-amber-700"><Star size={17} fill="currentColor" /> {product.rating?.toFixed?.(1) || "0.0"}</span>
+          <span className="inline-flex items-center gap-1 text-base font-bold text-amber-700">
+            <Star size={17} fill="currentColor" /> {Number(product.rating || 0).toFixed(1)}
+          </span>
         </div>
-        <p className="mb-5 text-sm text-muted">{reviews.length} people rated this book · {reviews.length} reviews</p>
+        <p className="mb-5 text-sm text-muted">
+          {product.reviewCount || reviews.length} {product.reviewCount === 1 || reviews.length === 1 ? "review" : "reviews"}
+        </p>
         {isAdmin ? (
           <>
             <div className="mb-5 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted">
@@ -119,9 +147,13 @@ export default function ProductDetails() {
             </button>
           </>
         ) : (
-          <button className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2 font-bold text-white hover:bg-blue-700" onClick={handleAddToCart}>
+          <button
+            disabled={isOutOfStock}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-2 font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            onClick={handleAddToCart}
+          >
             <ShoppingBag size={18} />
-            Add to cart
+            {isOutOfStock ? "Out of stock" : "Add to cart"}
           </button>
         )}
       </div>
@@ -130,6 +162,7 @@ export default function ProductDetails() {
         <h2 className="mb-4 text-2xl font-black">Reviews for {product.title} ({reviews.length})</h2>
         {user && !isAdmin && (
           <form onSubmit={submitReview} className="mb-6 grid gap-3 rounded-lg border border-line bg-white p-6 shadow-sm">
+            {reviewError && <p className="text-sm font-medium text-red-600">{reviewError}</p>}
             <select className="rounded-lg border border-line px-4 py-3 outline-none focus:border-blue-500" value={form.rating} onChange={(event) => setForm({ ...form, rating: Number(event.target.value) })}>
               {[5, 4, 3, 2, 1].map((value) => <option key={value} value={value}>{value} stars</option>)}
             </select>
@@ -146,7 +179,7 @@ export default function ProductDetails() {
         {reviews.length === 0 && <p className="text-muted">No reviews yet.</p>}
         <div className="grid gap-4 md:grid-cols-2">
           {visibleReviews.map((review, index) => (
-            <article className="rounded-lg border border-line bg-white p-5 shadow-sm" key={review._id || `${review.product}-${review.user?.name}-${index}`}>
+            <article className="rounded-lg border border-line bg-white p-5 shadow-sm" key={review._id || `${review.product}-${index}`}>
               <div className="mb-3 flex items-center justify-between gap-3">
                 <strong>{review.user?.name || "Reader"}</strong>
                 <span className="inline-flex items-center gap-1 font-bold text-amber-700"><Star size={16} fill="currentColor" /> {review.rating}/5</span>

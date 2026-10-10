@@ -13,7 +13,11 @@ export function CartProvider({ children }) {
       setItems([]);
       return;
     }
-    setItems(JSON.parse(localStorage.getItem(cartStorageKey) || "[]"));
+    try {
+      setItems(JSON.parse(localStorage.getItem(cartStorageKey) || "[]"));
+    } catch {
+      setItems([]);
+    }
   }, [cartStorageKey]);
 
   const persist = (nextItems) => {
@@ -31,9 +35,13 @@ export function CartProvider({ children }) {
   };
 
   const updateQuantity = (id, quantity) => {
-    const nextItems = items
-      .map((item) => item._id === id ? { ...item, quantity: Math.max(1, quantity) } : item)
-      .filter((item) => item.quantity > 0);
+    if (quantity <= 0) {
+      removeFromCart(id);
+      return;
+    }
+    const nextItems = items.map((item) =>
+      item._id === id ? { ...item, quantity } : item
+    );
 
     persist(nextItems);
   };

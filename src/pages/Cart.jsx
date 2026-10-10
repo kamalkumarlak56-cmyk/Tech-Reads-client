@@ -27,9 +27,22 @@ export default function Cart() {
                   <p className="text-muted">₹{item.price}</p>
                 </div>
                 <div className="flex w-max overflow-hidden rounded-lg border border-line">
-                  <button className="grid h-9 w-9 place-items-center bg-white hover:bg-slate-50" onClick={() => updateQuantity(item._id, item.quantity - 1)}><Minus size={15} /></button>
+                  <button
+                    className="grid h-9 w-9 place-items-center bg-white hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled={item.quantity <= 1}
+                    onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                    title="Decrease quantity"
+                  >
+                    <Minus size={15} />
+                  </button>
                   <span className="grid h-9 w-9 place-items-center">{item.quantity}</span>
-                  <button className="grid h-9 w-9 place-items-center bg-white hover:bg-slate-50" onClick={() => updateQuantity(item._id, item.quantity + 1)}><Plus size={15} /></button>
+                  <button
+                    className="grid h-9 w-9 place-items-center bg-white hover:bg-slate-50"
+                    onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                    title="Increase quantity"
+                  >
+                    <Plus size={15} />
+                  </button>
                 </div>
                 <button className="grid h-10 w-10 place-items-center rounded-lg border border-line bg-white hover:border-red-300 hover:text-red-600" onClick={() => removeFromCart(item._id)} title="Remove">
                   <Trash2 size={18} />
@@ -40,7 +53,7 @@ export default function Cart() {
           <aside className="rounded-lg border border-line bg-white p-6 shadow-soft">
             <h2 className="text-2xl font-black">Order summary</h2>
             <div className="my-5 flex justify-between"><span>Total</span><strong>₹{total}</strong></div>
-            <Link to="/checkout" className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700">Checkout</Link>
+            <Link to="/payment" className="inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 font-bold text-white hover:bg-blue-700">Checkout</Link>
           </aside>
         </div>
       )}

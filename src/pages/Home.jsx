@@ -3,18 +3,20 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import api from "../api/axios.js";
 import ProductCard from "../components/ProductCard.jsx";
+import { readCache, writeCache } from "../utils/dataCache.js";
 
 export default function Home() {
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState(() => readCache("products", []));
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
         const { data } = await api.get("/products", { params: { sort: "latest" } });
-        setProducts(data);
+        const list = data || [];
+        setProducts(list);
+        writeCache("products", list);
       } catch {
-        // The sample catalog keeps the homepage useful when the API is unavailable.
-        setProducts([]);
+        // Keep cached catalog if the API is temporarily unavailable.
       }
     };
 
@@ -28,8 +30,12 @@ export default function Home() {
       return newestFirst;
     })
     .slice(0, 3);
-  const mostPurchasedBooks = [...books].sort((a, b) => b.purchasedCount - a.purchasedCount).slice(0, 3);
-  const mostRatedBooks = [...books].sort((a, b) => b.rating - a.rating).slice(0, 3);
+  const mostPurchasedBooks = [...books]
+    .sort((a, b) => (b.purchasedCount || 0) - (a.purchasedCount || 0))
+    .slice(0, 3);
+  const mostRatedBooks = [...books]
+    .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    .slice(0, 3);
 
   return (
     <>

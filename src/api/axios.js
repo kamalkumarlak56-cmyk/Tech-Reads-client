@@ -5,7 +5,12 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const user = JSON.parse(localStorage.getItem("sellbooks_user") || "null");
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("sellbooks_user") || "null");
+  } catch {
+    user = null;
+  }
 
   if (user?.token) {
     config.headers.Authorization = `Bearer ${user.token}`;

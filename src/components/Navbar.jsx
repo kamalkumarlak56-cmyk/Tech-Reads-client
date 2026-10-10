@@ -7,14 +7,16 @@ const navLinkClass = ({ isActive }) =>
   `whitespace-nowrap text-sm font-medium transition ${isActive ? "text-blue-600" : "text-slate-600 hover:text-blue-600"}`;
 
 export default function Navbar() {
-  const { user, isAdmin, logout } = useAuth();
+  const { user, isAdmin, logoutWithDelay, isLoggingOut } = useAuth();
   const { items, resetCart } = useCart();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    resetCart();
-    logout();
-    navigate("/");
+    if (isLoggingOut) return;
+    logoutWithDelay(() => {
+      resetCart();
+      navigate("/", { replace: true });
+    }, 1400);
   };
 
   return (
@@ -30,6 +32,7 @@ export default function Navbar() {
           <>
             <NavLink to="/" className={navLinkClass}>Home</NavLink>
             <NavLink to="/products" className={navLinkClass}>Products</NavLink>
+            <NavLink to="/reviews" className={navLinkClass}>Reviews</NavLink>
             <NavLink to="/about" className={navLinkClass}>About</NavLink>
             <NavLink to="/contact" className={navLinkClass}>Contact</NavLink>
           </>
@@ -45,7 +48,12 @@ export default function Navbar() {
             {!isAdmin && <Link to="/dashboard" className="grid h-10 w-10 place-items-center rounded-lg border border-line bg-white text-ink transition hover:border-blue-300 hover:text-blue-600" title="Dashboard">
               <UserCircle size={20} />
             </Link>}
-            <button className="grid h-10 w-10 place-items-center rounded-lg border border-line bg-white text-ink transition hover:border-blue-300 hover:text-blue-600" onClick={handleLogout} title="Logout">
+            <button
+              className="grid h-10 w-10 place-items-center rounded-lg border border-line bg-white text-ink transition hover:border-blue-300 hover:text-blue-600 disabled:opacity-50"
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              title="Logout"
+            >
               <LogOut size={19} />
             </button>
           </>

@@ -20,10 +20,14 @@ const getBaseURL = () => {
 };
 
 const api = axios.create({
+<<<<<<< HEAD
   baseURL: getBaseURL(),
   headers: {
     "Content-Type": "application/json"
   }
+=======
+  baseURL: import.meta.env.VITE_API_URL
+>>>>>>> 53b15911fcbdec97e05a8865781f30cb3c1a044a
 });
 
 api.interceptors.request.use(
